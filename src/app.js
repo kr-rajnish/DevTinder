@@ -2,75 +2,42 @@ const express = require("express");
 
 const app = express();
 
-//Advance Routing
+// Error Middleware Placement – The error-handling middleware should have four parameters (err, req, res, next), but it needs to be defined after all normal middleware.
 
-// app.get("/ab?c", (req, res) => {
-//   res.send({
-//     first_name: "Rajnish",
-//     last_name: "Kumar",
-//   });
-// });
+app.get(
+  "/user",
+  (req, res, next) => {
+    console.log("1st response");
+    // res.send("1at response");
+    next();
+  },
+  (req, res, next) => {
+    console.log("2nd response");
+    // res.send("2nd response");
+    next();
+  },
+  (req, res, next) => {
+    console.log("3rd response");
+    // res.send("3rd response");
+    next();
+  },
+  (req, res, next) => {
+    console.log("4th response");
+    // res.send("4th response");
+    next();
+  },
+  (req, res) => {
+    console.log("5th response");
+    res.send("5th response");
+  }
+);
 
-// app.get("/ab+c", (req, res) => {
-//   res.send({
-//     first_name: "Rajnish",
-//     last_name: "Kumar",
-//   });
-// });
-
-// app.get("/ab*cd", (req, res) => {
-//   res.send({
-//     first_name: "Rajnish",
-//     last_name: "Kumar",
-//   });
-// });
-
-// app.get("/a(bc)?d", (req, res) => {
-//   res.send({
-//     first_name: "Rajnish",
-//     last_name: "Kumar",
-//   });
-// });
-
-// app.get(/a/, (req, res) => {
-//   res.send({
-//     first_name: "Rajnish",
-//     last_name: "Kumar",
-//   });
-// });
-
-// app.get(/.*fly$/, (req, res) => {
-//   res.send({
-//     first_name: "Rajnish",
-//     last_name: "Kumar",
-//   });
-// });
-
-//passing data in query params in routes => called Dynamic routing
-//http://localhost:3000/user?userId=12345&password=123456789
-
+//for sending multiple responses at single time.
 // app.get("/user", (req, res) => {
-//   const quaryData = req.query;
-//   console.log(quaryData);
-//   res.send({
-//     first_name: "Rajnish",
-//     last_name: "Kumar",
-//     quaryData,
-//   });
+//   res.write("1st response!\n");
+//   res.write("2nd response!\n");
+//   res.end(); // End the response
 // });
-
-//Passing data in params of path variable => called Dynamic Routing
-//http://localhost:3000/user/:userId
-
-app.get("/user/:userId", (req, res) => {
-  const paramsData = req.params;
-  console.log(paramsData);
-  res.send({
-    first_name: "Rajnish",
-    last_name: "Kumar",
-    paramsData,
-  });
-});
 
 app.use("/test", (req, res) => {
   res.send("Hello From Server /test!");
