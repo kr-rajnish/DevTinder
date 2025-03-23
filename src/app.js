@@ -2,36 +2,76 @@ const express = require("express");
 
 const app = express();
 
-// This will match only GET http method API calls
-app.get("/user", (req, res) => {
+//Advance Routing
+
+// app.get("/ab?c", (req, res) => {
+//   res.send({
+//     first_name: "Rajnish",
+//     last_name: "Kumar",
+//   });
+// });
+
+// app.get("/ab+c", (req, res) => {
+//   res.send({
+//     first_name: "Rajnish",
+//     last_name: "Kumar",
+//   });
+// });
+
+// app.get("/ab*cd", (req, res) => {
+//   res.send({
+//     first_name: "Rajnish",
+//     last_name: "Kumar",
+//   });
+// });
+
+// app.get("/a(bc)?d", (req, res) => {
+//   res.send({
+//     first_name: "Rajnish",
+//     last_name: "Kumar",
+//   });
+// });
+
+// app.get(/a/, (req, res) => {
+//   res.send({
+//     first_name: "Rajnish",
+//     last_name: "Kumar",
+//   });
+// });
+
+// app.get(/.*fly$/, (req, res) => {
+//   res.send({
+//     first_name: "Rajnish",
+//     last_name: "Kumar",
+//   });
+// });
+
+//passing data in query params in routes => called Dynamic routing
+//http://localhost:3000/user?userId=12345&password=123456789
+
+// app.get("/user", (req, res) => {
+//   const quaryData = req.query;
+//   console.log(quaryData);
+//   res.send({
+//     first_name: "Rajnish",
+//     last_name: "Kumar",
+//     quaryData,
+//   });
+// });
+
+//Passing data in params of path variable => called Dynamic Routing
+//http://localhost:3000/user/:userId
+
+app.get("/user/:userId", (req, res) => {
+  const paramsData = req.params;
+  console.log(paramsData);
   res.send({
     first_name: "Rajnish",
     last_name: "Kumar",
+    paramsData,
   });
 });
 
-// This will match only POST http method API calls
-app.post("/user", (req, res) => {
-  //Write code to send data to database
-  res.send("Data is saved to database");
-});
-
-// This will match only DELETE http method API calls
-app.delete("/user", (req, res) => {
-  res.send("Data is deleted from database");
-});
-
-// This will match only PUT http method API calls
-app.put("/user", (req, res) => {
-  res.send("Data is updated in database by put method");
-});
-
-// This will match only PATCH http method API calls
-app.patch("/user", (req, res) => {
-  res.send("Data is updated in database by patch method");
-});
-
-//This will match all http method API calls to /test
 app.use("/test", (req, res) => {
   res.send("Hello From Server /test!");
 });
