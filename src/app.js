@@ -1,29 +1,39 @@
 const express = require("express");
-const { adminAuth, userAuth } = require("./middlewares/auth");
+// const { adminAuth, userAuth } = require("./middlewares/auth");
+const connectDB = require("./confige/database");
+const User = require("./models/user");
 
 const app = express();
+app.use(express.json());
 
-// Error Middleware Placement – The error-handling middleware should have four parameters (err, req, res, next), but it needs to be defined after all normal middleware.
+app.post("/signup", async (req, res) => {
+  //creating a user instance
+  // const user = new User({
+  //   firstName: "Pran",
+  //   lastName: "Ranjan",
+  //   emailId: "Pran@gmail.com",
+  //   password: "Pran@123",
+  // });
 
-//Handle Auth Middleware for all GET POST,... requests
-app.use("/admin", adminAuth);
+  //receiving user instance from body json
+  const user = new User(req.body);
 
-app.get("/admin/getAllData", (req, res) => {
-  res.send("All data");
+  //saving the user
+  try {
+    const savedUser = await user.save();
+    res.send({ message: "User saved successfully", data: savedUser });
+  } catch (error) {
+    res.status(400).send(error || "Something went wrong to save the user");
+  }
 });
 
-app.get("/admin/deleteUser", (req, res) => {
-  res.send("Deleted a user");
-});
-
-app.post("/user/login", (req, res) => {
-  res.send("User logged in successfully");
-});
-
-app.get("/user/data", userAuth, (req, res) => {
-  res.send("User data");
-});
-
-app.listen(3000, () => {
-  console.log("Server is running on port 3000");
-});
+connectDB()
+  .then(() => {
+    console.log("Database is connected");
+    app.listen(3000, () => {
+      console.log("Server is running on port 3000");
+    });
+  })
+  .catch((err) => {
+    console.log("Database is not connected");
+  });
