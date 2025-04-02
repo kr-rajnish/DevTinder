@@ -7,19 +7,15 @@ const app = express();
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
-  //creating a user instance
-  // const user = new User({
-  //   firstName: "Pran",
-  //   lastName: "Ranjan",
-  //   emailId: "Pran@gmail.com",
-  //   password: "Pran@123",
-  // });
-
-  //receiving user instance from body json
   const user = new User(req.body);
 
-  //saving the user
+  //saving the user in db.
   try {
+    //Check if user already exists
+    const existingUser = await User.findOne({ emailId: req.body.emailId });
+    if (existingUser) {
+      return res.status(400).send("User already exists");
+    }
     const savedUser = await user.save();
     res.send({ message: "User saved successfully", data: savedUser });
   } catch (error) {
