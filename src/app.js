@@ -71,6 +71,42 @@ app.get("/feed", async (req, res) => {
   }
 });
 
+//Delete User API
+app.delete("/user", async (req, res) => {
+  const userId = req.body.userId;
+  // const userEmail = req.body.emailId;
+  try {
+    const user = await User.findByIdAndDelete({ _id: userId });
+    // const user = await User.findOneAndDelete({ emailId: userEmail });
+    if (user === null) {
+      return res.status(400).send("User not found");
+    }
+    res.send(user);
+  } catch (error) {
+    res.status(404).send(error || "Something went wrong to delete user");
+  }
+});
+
+app.patch("/user", async (req, res) => {
+  // const userId = req.body.userId;
+  const userEmail = req.body.emailId;
+  const data = { firstName: req.body.firstName, lastName: req.body.lastName };
+  try {
+    // const user = await User.findByIdAndUpdate({ _id: userId }, data, {
+    //   returnDocument: "after",
+    // });
+    const user = await User.findOneAndUpdate({ emailId: userEmail }, data, {
+      returnDocument: "after",
+    });
+    if (user === null) {
+      return res.status(400).send("User not found");
+    }
+    res.send(user);
+  } catch (error) {
+    res.status(404).send(error || "Something went wrong to update user");
+  }
+});
+
 connectDB()
   .then(() => {
     console.log("Database is connected");
