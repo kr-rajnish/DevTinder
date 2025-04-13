@@ -23,42 +23,19 @@ app.post("/signup", async (req, res) => {
   }
 });
 
+// geting user by id
 app.get("/user", async (req, res) => {
-  // geting user by email
-  const userEmail = req.body.emailId;
+  const userId = req.body._id;
   try {
-    //with find method returns an array
-    const user = await User.find({ emailId: userEmail }); //=> getting only the users match the emailId.
-
-    if (user.length === 0) {
+    const user = await User.findById(userId);
+    if (user === null) {
       return res.status(400).send("User not found");
     }
     res.send(user);
-
-    //   //with findOne method returns only one document
-    //   const user = await User.findOne({ emailId: userEmail });
-    //   if (user === null) {
-    //     return res.status(400).send("User not found");
-    //   }
-    //   res.send(user);
   } catch (error) {
-    res
-      .status(404)
-      .send(error || "Something went wrong to get user by EmailId");
+    res.status(404).send(error || "Something went wrong to get user by Id");
+    console.log(error);
   }
-
-  // geting user by id
-  // const userId = req.body._id;
-  // try {
-  //   const user = await User.findById(userId);
-  //   if (user === null) {
-  //     return res.status(400).send("User not found");
-  //   }
-  //   res.send(user);
-  // } catch (error) {
-  //   res.status(404).send(error || "Something went wrong to get user by Id");
-  //   // console.log(error);
-  // }
 });
 
 //Feed API - Get all the users in the database
@@ -74,10 +51,9 @@ app.get("/feed", async (req, res) => {
 //Delete User API
 app.delete("/user", async (req, res) => {
   const userId = req.body.userId;
-  // const userEmail = req.body.emailId;
+
   try {
     const user = await User.findByIdAndDelete({ _id: userId });
-    // const user = await User.findOneAndDelete({ emailId: userEmail });
     if (user === null) {
       return res.status(400).send("User not found");
     }
@@ -87,21 +63,30 @@ app.delete("/user", async (req, res) => {
   }
 });
 
+//Update user
 app.patch("/user", async (req, res) => {
-  // const userId = req.body.userId;
-  const userEmail = req.body.emailId;
-  const data = { firstName: req.body.firstName, lastName: req.body.lastName };
+  const userId = req.body.userId;
+  const data = req.body;
   try {
-    // const user = await User.findByIdAndUpdate({ _id: userId }, data, {
-    //   returnDocument: "after",
-    // });
-    const user = await User.findOneAndUpdate({ emailId: userEmail }, data, {
+    const user = await User.findByIdAndUpdate({ _id: userId }, data, {
       returnDocument: "after",
     });
+
     if (user === null) {
-      return res.status(400).send("User not found");
+      const response = {
+        success: false,
+        message: "User not found",
+      };
+      return res.status(400).send(response);
     }
-    res.send(user);
+
+    const savedUpdatedUser = await user.save();
+    const response = {
+      success: true,
+      message: "User updated successfully",
+      data: savedUpdatedUser,
+    };
+    res.send(response);
   } catch (error) {
     res.status(404).send(error || "Something went wrong to update user");
   }
