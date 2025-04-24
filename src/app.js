@@ -19,7 +19,9 @@ app.post("/signup", async (req, res) => {
     const savedUser = await user.save();
     res.send({ message: "User saved successfully", data: savedUser });
   } catch (error) {
-    res.status(404).send(error || "Something went wrong to save the user");
+    res
+      .status(404)
+      .send(error.message || "Something went wrong to save the user");
   }
 });
 

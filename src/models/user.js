@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const validator = require("validator");
 
 //importing Schema
 const { Schema } = mongoose;
@@ -8,13 +9,30 @@ const userSchema = new Schema(
   {
     firstName: { type: String, required: true, trim: true, minLength: 4 },
     lastName: { type: String, trim: true },
-    emailId: { type: String, unique: true, required: true, lowercase: true },
+
+    emailId: {
+      type: String,
+      unique: true,
+      required: true,
+      lowercase: true,
+      trim: true,
+      validate(value) {
+        if (!validator.isEmail(value)) {
+          throw new Error("Invalid email" + " " + value);
+        }
+      },
+    },
     password: {
       type: String,
       required: true,
       minLength: 6,
       maxLength: 12,
       trim: true,
+      validate(value) {
+        if (!validator.isStrongPassword(value)) {
+          throw new Error("Password is not strong enough");
+        }
+      },
     },
     age: { type: Number, min: 18 },
     gender: {
