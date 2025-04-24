@@ -64,12 +64,32 @@ app.delete("/user", async (req, res) => {
 });
 
 //Update user
-app.patch("/user", async (req, res) => {
-  const userId = req.body.userId;
+app.patch("/user/:userId", async (req, res) => {
+  const userId = req.params?.userId;
   const data = req.body;
+
   try {
+    //Api validation
+    const allowedFields = [
+      "firstName",
+      "lastName",
+      "password",
+      "about",
+      "skills",
+    ];
+    const isFieldValid = Object.keys(data).every((key) => {
+      return allowedFields.includes(key);
+    });
+    if (!isFieldValid) {
+      throw new Error("Invalid fields not allowed");
+    }
+    if (data.skills.length > 5) {
+      throw new Error("Skills cannot be more than 5");
+    }
+
     const user = await User.findByIdAndUpdate({ _id: userId }, data, {
       returnDocument: "after",
+      runValidators: true,
     });
 
     if (user === null) {
@@ -88,7 +108,9 @@ app.patch("/user", async (req, res) => {
     };
     res.send(response);
   } catch (error) {
-    res.status(404).send(error || "Something went wrong to update user");
+    res
+      .status(404)
+      .send(error.message || "Something went wrong to update user");
   }
 });
 
