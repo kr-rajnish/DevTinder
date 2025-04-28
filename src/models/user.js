@@ -25,8 +25,6 @@ const userSchema = new Schema(
     password: {
       type: String,
       required: true,
-      minLength: 6,
-      maxLength: 12,
       trim: true,
       validate(value) {
         if (!validator.isStrongPassword(value)) {

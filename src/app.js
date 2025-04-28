@@ -2,6 +2,8 @@ const express = require("express");
 // const { adminAuth, userAuth } = require("./middlewares/auth");
 const connectDB = require("./confige/database");
 const User = require("./models/user");
+const { validateSignupData } = require("./utils/validation");
+const bcrypt = require("bcrypt");
 
 const app = express();
 app.use(express.json());
@@ -10,18 +12,47 @@ app.post("/signup", async (req, res) => {
   const user = new User(req.body);
 
   try {
-    //Check if user already exists
-    const existingUser = await User.findOne({ emailId: req.body.emailId });
-    if (existingUser) {
-      return res.status(400).send("User already exists");
-    }
-    //saving the user in db.
+    //validation of data
+    validateSignupData(req);
+
+    const { firstName, lastName, emailId, password } = req.body;
+
+    //hashing password
+    const passwordHash = await bcrypt.hash(password, 10);
+    console.log(passwordHash);
+
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+    });
+
     const savedUser = await user.save();
-    res.send({ message: "User saved successfully", data: savedUser });
+    res.send(savedUser);
   } catch (error) {
-    res
-      .status(404)
-      .send(error.message || "Something went wrong to save the user");
+    console.log(error);
+    res.status(400).send("ERROR: " + error.message);
+  }
+});
+
+//login API
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    const user = await User.findOne({ emailId: emailId });
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (isPasswordValid) {
+      res.send("Login Success");
+    } else {
+      throw new Error("User not found");
+    }
+  } catch (error) {
+    res.status(400).send("ERROR: " + error.message);
   }
 });
 
