@@ -6,6 +6,7 @@ const { validateSignupData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
+const { userAuth } = require("./middlewares/auth");
 
 const app = express();
 app.use(express.json());
@@ -48,13 +49,15 @@ app.post("/login", async (req, res) => {
       throw new Error("User not found");
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.validatePassword(password);
     if (isPasswordValid) {
       //Create JWT token
-      const token = jwt.sign({ userId: user._id }, "secretKey");
+      const token = await user.getJWT();
 
       // Add token to the cookie
-      res.cookie("token", token);
+      res.cookie("token", token, {
+        expires: new Date(Date.now() + 8 * 3600000),
+      });
 
       res.send("Login Success");
     } else {
@@ -66,22 +69,9 @@ app.post("/login", async (req, res) => {
 });
 
 //Get profile
-app.get("/profile", async (req, res) => {
+app.get("/profile", userAuth, async (req, res) => {
   try {
-    const cookie = req.cookies;
-    const { token } = cookie;
-
-    if (!token) {
-      throw new Error("User not found: invalid token");
-    }
-
-    const decodeMessage = jwt.verify(token, "secretKey");
-    console.log(decodeMessage);
-    const { userId } = decodeMessage;
-    const user = await User.findById(userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = req.user;
 
     res.send(user);
   } catch (error) {
@@ -89,94 +79,13 @@ app.get("/profile", async (req, res) => {
   }
 });
 
-// geting user by id
-app.get("/user", async (req, res) => {
-  const userId = req.body._id;
+app.post("/sendConnectionRequest", userAuth, async (req, res) => {
   try {
-    const user = await User.findById(userId);
-    if (user === null) {
-      return res.status(400).send("User not found");
-    }
-    res.send(user);
+    const user = req.user;
+    console.log("cookies", req.cookies);
+    res.send(user.firstName + " " + "sent a connection request");
   } catch (error) {
-    res.status(404).send(error || "Something went wrong to get user by Id");
-    console.log(error);
-  }
-});
-
-//Feed API - Get all the users in the database
-app.get("/feed", async (req, res) => {
-  try {
-    const users = await User.find({}); //=> getting all the users
-    res.send(users);
-  } catch (error) {
-    res.status(404).send(error || "Something went wrong to get feed");
-  }
-});
-
-//Delete User API
-app.delete("/user", async (req, res) => {
-  const userId = req.body.userId;
-
-  try {
-    const user = await User.findByIdAndDelete({ _id: userId });
-    if (user === null) {
-      return res.status(400).send("User not found");
-    }
-    res.send(user);
-  } catch (error) {
-    res.status(404).send(error || "Something went wrong to delete user");
-  }
-});
-
-//Update user
-app.patch("/user/:userId", async (req, res) => {
-  const userId = req.params?.userId;
-  const data = req.body;
-
-  try {
-    //Api validation
-    const allowedFields = [
-      "firstName",
-      "lastName",
-      "password",
-      "about",
-      "skills",
-    ];
-    const isFieldValid = Object.keys(data).every((key) => {
-      return allowedFields.includes(key);
-    });
-    if (!isFieldValid) {
-      throw new Error("Invalid fields not allowed");
-    }
-    if (data.skills.length > 5) {
-      throw new Error("Skills cannot be more than 5");
-    }
-
-    const user = await User.findByIdAndUpdate({ _id: userId }, data, {
-      returnDocument: "after",
-      runValidators: true,
-    });
-
-    if (user === null) {
-      const response = {
-        success: false,
-        message: "User not found",
-      };
-      return res.status(400).send(response);
-    }
-
-    const savedUpdatedUser = await user.save();
-    const response = {
-      success: true,
-      message: "User updated successfully",
-      data: savedUpdatedUser,
-    };
-    res.send(response);
-  } catch (error) {
-    res
-      .status(404)
-      .send(error.message || "Something went wrong to update user");
+    res.status(400).send("ERROR: " + error.message);
   }
 });
 
