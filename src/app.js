@@ -4,9 +4,12 @@ const connectDB = require("./confige/database");
 const User = require("./models/user");
 const { validateSignupData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   const user = new User(req.body);
@@ -47,10 +50,40 @@ app.post("/login", async (req, res) => {
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (isPasswordValid) {
+      //Create JWT token
+      const token = jwt.sign({ userId: user._id }, "secretKey");
+
+      // Add token to the cookie
+      res.cookie("token", token);
+
       res.send("Login Success");
     } else {
       throw new Error("User not found");
     }
+  } catch (error) {
+    res.status(400).send("ERROR: " + error.message);
+  }
+});
+
+//Get profile
+app.get("/profile", async (req, res) => {
+  try {
+    const cookie = req.cookies;
+    const { token } = cookie;
+
+    if (!token) {
+      throw new Error("User not found: invalid token");
+    }
+
+    const decodeMessage = jwt.verify(token, "secretKey");
+    console.log(decodeMessage);
+    const { userId } = decodeMessage;
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    res.send(user);
   } catch (error) {
     res.status(400).send("ERROR: " + error.message);
   }
